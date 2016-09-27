@@ -4,16 +4,18 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GeneticAlgorithmBoard extends GeneticAlgorithm<Board> {
 	
 	private int N;
+	private BoardGen boardGen;
 	
 	public GeneticAlgorithmBoard(int N, int max, int nextMax) {
 		super(max, nextMax);
 		
 		this.N=N;
+		this.boardGen=new BoardGen(N);
 	}
 	
 	@Override
 	public Board genPotential() {
-		return new Board(N);
+		return new Board(boardGen);
 	}
 
 	@Override
@@ -80,7 +82,7 @@ public class GeneticAlgorithmBoard extends GeneticAlgorithm<Board> {
 
 			return new Board(arr);
 		} else {
-			return new Board(N);
+			return new Board(boardGen);
 		}
 	}
 

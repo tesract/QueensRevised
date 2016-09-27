@@ -14,3 +14,5 @@ Current attempt:
 
 Using a constraint satisfier library, has yielded the best results so far, it can solve n=25 in under 5 minutes.  Reports of 999 solutions took 11 hours, so this might work.  Committing code to try on stronger machine.
 
+Memory usage on the constraints satisfier are too high using my current implementation, I susepect it would be slow also, since even if there was enough ram there would be no cache locality.
+

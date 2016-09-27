@@ -5,23 +5,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Board {
 	int arr[];
 
-	public Board(int n) {
-		arr = new int[n];
-
-		for(int i=0; i<n; i++)
-		{
-			arr[i]=i;
-		}
-		
-		while(!miniFit())
-		{
-			Util.shuffleArray(arr);
-		}
+	public Board(BoardGen boardGen) {
+		this(boardGen.genBoardDiag());
 	}
 
 	public Board(int arr[]) {
 		this.arr = arr;
 	}
+
 
 	public static void shuffleArray(int[] arr) {
 		
@@ -80,13 +71,6 @@ public class Board {
 		}
 	}
 	
-	public boolean miniFit()
-	{
-		
-		
-		return true;
-	}
-	
 	private HashSet<Integer> conflicts = new HashSet<Integer>();
 	private Float fitness;
 
@@ -105,7 +89,7 @@ public class Board {
 
 					// check diagonals
 					if (ax == ay || ax == -ay) {
-						System.out.println(x1+","+y1+" "+x2+","+y2);
+//						System.out.println(x1+","+y1+" "+x2+","+y2);
 						 conflicts.add(x1);
 						 conflicts.add(x2);
 						 continue;
@@ -126,7 +110,7 @@ public class Board {
 						final int y3 = arr[x3];
 
 						if (x3 * ay - y3 * ax == M) {
-							System.out.println(x1+" "+x2+" "+x3);
+//							System.out.println(x1+" "+x2+" "+x3);
 
 							conflicts.add(x1);
 							conflicts.add(x2);
