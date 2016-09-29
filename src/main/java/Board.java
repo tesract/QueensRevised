@@ -1,148 +1,146 @@
-import java.util.HashSet;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Arrays;
+import java.util.BitSet;
 
 public class Board {
-	int arr[];
+	final int[] pos;
 
-	public Board(BoardGen boardGen) {
-		this(boardGen.genBoardDiag());
+	public Board(int ... pos) {
+		this.pos = pos;
 	}
 
-	public Board(int arr[]) {
-		this.arr = arr;
-	}
+	public static Board combine(final Board tl, final Board tr, final Board bl, final Board br) {
+		int s = tl.pos.length;
 
+		int[] ret = new int[s * 2];
 
-	public static void shuffleArray(int[] arr) {
-		
-		int diag[] = new int[arr.length*2];
-		int biag[] = new int[arr.length*2];
-		int conflicts=0;
-		
-		for(int i=0; i<arr.length; i++)
-		{
-			int d = i-arr[i];
-			int b = (arr.length-1-i)-arr[i];
-			
-			if (++diag[d]>1) conflicts++;
-			if (++biag[b]>1) conflicts++;
-		}
-		
-		// If running on Java 6 or older, use `new Random()` on RHS here
-		Random rnd = ThreadLocalRandom.current();
-		for (int i1 = arr.length - 1; i1 > 0; i1--) {
-			int i2 = rnd.nextInt(i1 + 1);
-			
-			int a1 = arr[i1];
-			int a2 = arr[i2];
-			
-			int d1a = i1-a1;
-			int d2a = i2-a2;
-			int b1a = (arr.length-1-i1) - a1;
-			int b2a = (arr.length-1-i2) - a2;
-			
-			int d1b = i1-a2;
-			int d2b = i2-a1;
-			int b1b = (arr.length-1-i1) - a2;
-			int b2b = (arr.length-1-i2) - a1;
-			
-			arr[i1]=a2;
-			arr[i2]=a1;
-			
-			while(
-				biag[b1a]!=0 ||
-				biag[b2a]!=0 ||
-				biag[b1b]!=0 ||
-				biag[b2b]!=0)
-			{
-				
+		for (int i = 0; i < s; i++) {
+			if ((tl.pos[i] != -1 && tl.pos[i] == bl.pos[i]) ||
+				(tr.pos[i] != -1 && tr.pos[i] == br.pos[i])) {
+				System.out.println(tl+" "+tr);
+				System.out.println(bl+" "+br);
+				throw new Error("combine");
 			}
 			
-			if (--diag[d1a]<=1) conflicts--;
-			if (--diag[d2a]<=1) conflicts--;
-			if (--biag[b1a]<=1) conflicts--;
-			if (--biag[b2a]<=1) conflicts--;
-			
-			if (--diag[d1b]<=1) conflicts++;
-			if (--diag[d2b]<=1) conflicts++;
-			if (--biag[b1b]<=1) conflicts++;
-			if (--biag[b2b]<=1) conflicts++;
+			if (tl.pos[i] != -1)
+				ret[i] = tl.pos[i];
+			else if (bl.pos[i] != -1)
+				ret[i] = bl.pos[i] + s;
+			else
+				ret[i] = -1;
+
+			if (tr.pos[i] != -1)
+				ret[i + s] = tr.pos[i];
+			else if (br.pos[i] != -1)
+				ret[i + s] = br.pos[i] + s;
+			else
+				ret[i + s] = -1;
 		}
+		
+		return new Board(ret);
 	}
-	
-	private HashSet<Integer> conflicts = new HashSet<Integer>();
-	private Float fitness;
 
-	public float getFitness() {
-		if (fitness == null) {
-			final int N = arr.length;
+	public boolean isValid() {
+		int s = pos.length;
 
-			for (int x1 = 0; x1 < N; x1++) {
-				final int y1 = arr[x1];
+		BitSet horiz = new BitSet(s);
+		for (int i = 0; i < s; i++) {
+			if (pos[i] == -1)
+				continue;
 
-				for (int x2 = x1 + 1; x2 < N; x2++) {
-					final int y2 = arr[x2];
+			if (horiz.get(pos[i]))
+			{
+				return false;
+			}
+			horiz.set(pos[i]);
+		}
 
-					int ax = x2 - x1;
-					int ay = y2 - y1;
+		// test verticals
 
-					// check diagonals
-					if (ax == ay || ax == -ay) {
-//						System.out.println(x1+","+y1+" "+x2+","+y2);
-						 conflicts.add(x1);
-						 conflicts.add(x2);
-						 continue;
-					}
+		// test diagonals
+		SlashSet slash = new SlashSet(s);
+		for (int x = 0; x < s; x++) {
+			int y = pos[x];
 
-					int gcd = Math.abs(Util.GCD(ax, ay));
+			if (y == -1) continue;
 
-					ax = ax / gcd;
-					ay = ay / gcd;
+			if (!slash.Add(x, y))
+			{
+				return false;
+			}
+		}
 
-					final int M = x1 * ay - y1 * ax;
+		ThreeQueenChecker checker = new ThreeQueenChecker();
+		for (int x = 0; x < s; x++) {
+			int y = pos[x];
+			
+			if (y!=-1 && !checker.Add(x, y))
+				return false;
+		}
 
-					// check 3 aligned
-					for (int x3 = x1 % ax; x3 < N; x3 += ax) {
-						if (x1 == x3 || x2 == x3 || x3<x2)
-							continue;
+		// test 3 queens
+		for (int x1 = 0; x1 < s; x1++) {
+			int y1 = pos[x1];
+			if (y1==-1) continue;
+			for (int x2 = x1 + 1; x2 < s; x2++) {
+				int y2 = pos[x2];
+				if (y2==-1) continue;
+				for (int x3 = x2 + 1; x3 < s; x3++) {
+					int y3 = pos[x3];
+					if (y3==-1) continue;
 
-						final int y3 = arr[x3];
-
-						if (x3 * ay - y3 * ax == M) {
-//							System.out.println(x1+" "+x2+" "+x3);
-
-							conflicts.add(x1);
-							conflicts.add(x2);
-							conflicts.add(x3);
-							continue;
-						}
+					if (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2) == 0) {
+						return false;
 					}
 				}
 			}
-
-			fitness=(arr.length - conflicts.size())/(float)arr.length;
 		}
-
-		return fitness;
+		/*
+		*/
+		
+		
+		return true;
+	}
+	
+	public boolean isFull() {
+		for(int v : pos) {
+			if (v==-1) return false;
+		}
+		
+		return true;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-
-		for (int i = 0; i < arr.length; i++)
-			sb.append(arr[i]).append(" ");
-		sb.append("\n");
-
-		for (int y = 0; y < arr.length; y++) {
-			for (int x = 0; x < arr.length; x++) {
-				sb.append((arr[y] == x) ? 'x' : '_');
-			}
-
-			sb.append("\n");
+		
+		sb.append("B[ ");
+		for(int i=0; i<pos.length; i++)
+		{
+			sb.append(pos[i]);
+			sb.append(' ');
 		}
-
+		sb.append(']');
+		sb.append(isValid()?"V":"NV");
+		
 		return sb.toString();
+	}
+	
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(pos);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Board other = (Board) obj;
+		if (!Arrays.equals(pos, other.pos))
+			return false;
+		return true;
 	}
 }

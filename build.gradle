@@ -5,9 +5,10 @@ repositories {
 }
 
 dependencies {
-    compile 'org.slf4j:slf4j-api:1.7.12'
-
-	compile 'de.sciss:jacop:3.3.0';
-
+    compile 'com.google.guava:guava:19.0'
+	compile 'org.apache.commons:commons-collections4:4.1'
+	compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'org.choco-solver:choco-solver:3.3.0'
+	
     testCompile 'junit:junit:4.12'
 }
